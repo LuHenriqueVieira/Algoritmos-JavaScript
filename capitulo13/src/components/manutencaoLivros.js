@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import ItemLista from "./ItemLista";
 
 const ManutencaoLivros = () => {
-  const [ livros, setLivros ] = useState([]);
+  const [livros, setLivros] = useState([]);
   const { register, handleSubmit, reset } = useForm();
 
   const obterLista = async () => {
@@ -32,6 +32,33 @@ const ManutencaoLivros = () => {
     }
   };
 
+  const excluir = async (id, titulo) => {
+    if (!window.confirm(`Confirma a exclusão do livro "${titulo}"`)) {
+      return;
+    }
+    try {
+      await inAxios.delete(`livros/${id}`);
+      setLivros(livros.filter((livro) => livro.id !== id));
+    } catch (error) {
+      alert(`Erro... Não foi possível excluir este livro: ${error}`);
+    }
+  };
+
+  const alterar = async (id, titulo, index) => {
+    const novoPreco = Number(prompt(`Informe o novo preço do livro "${titulo}"`));
+    if (isNaN(novoPreco) || novoPreco === 0) {
+      return;
+    }
+    try {
+      await inAxios.put(`livros/${id}`, { preco: novoPreco });
+      const livrosAlteração = [...livros];
+      livrosAlteração[index].preco = novoPreco;
+      setLivros(livrosAlteração);
+    } catch (error) {
+      alert(`Erro... Não foi possível alterar o preço: ${error}`);
+    }
+  };
+
   return (
     <div className="container">
       <div className="row">
@@ -53,11 +80,15 @@ const ManutencaoLivros = () => {
                 className="btn btn-primary"
                 value="Pesquisar"
               />
-              <input 
-                type="button" 
+              <input
+                type="button"
                 className="btn btn-danger"
-                value="Todos" 
-                onClick={() => { reset({palavra: ""}); obterLista();}}/>
+                value="Todos"
+                onClick={() => {
+                  reset({ palavra: "" });
+                  obterLista();
+                }}
+              />
             </div>
           </form>
         </div>
@@ -76,7 +107,7 @@ const ManutencaoLivros = () => {
           </tr>
         </thead>
         <tbody>
-          {livros.map((livro) => (
+          {livros.map((livro, index) => (
             <ItemLista
               key={livro.id}
               id={livro.id}
@@ -85,6 +116,8 @@ const ManutencaoLivros = () => {
               ano={livro.ano}
               preco={livro.preco}
               foto={livro.foto}
+              excluirClick={() => excluir(livro.id, livro.titulo)}
+              alterarClick={() => alterar(livro.id, livro.titulo, index)}
             />
           ))}
         </tbody>
